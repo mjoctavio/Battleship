@@ -30,7 +30,7 @@ public class RandomGuessPlayer implements Player {
         this.rowSize = world.numRow;
         this.clnSize = world.numColumn;
         this.isHex = world.isHex;
-        this.isguessed = new boolean[this.rowSize][this.clnSize + (this.rowSize + 1) / 2];
+        this.isguessed = new boolean[this.rowSize][this.clnSize];
         int var2 = 0;
 
         for (Iterator var3 = world.shipLocations.iterator(); var3.hasNext(); ++var2) {

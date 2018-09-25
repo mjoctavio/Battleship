@@ -1,5 +1,8 @@
 package player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import world.World;
 
@@ -10,11 +13,27 @@ import world.World;
  * @author Youhan Xia, Jeffrey Chan
  */
 public class GreedyGuessPlayer  implements Player{
+    public List<Guess> patternGuesses;
+    public List<Guess> greedyGuesses;
+    public boolean[][] hitMatrix;
 
     @Override
     public void initialisePlayer(World world) {
-        // To be implemented.
+        patternGuesses = new ArrayList<>();
+        hitMatrix = new boolean[world.numColumn][world.numRow];
+        enumeratePatternGuesses(patternGuesses, world);
     } // end of initialisePlayer()
+
+    private void enumeratePatternGuesses(List<Guess> list, World world) {
+        for(int row = 0; row < world.numRow; ++row){
+            for(int col = row%2; col < world.numColumn; col+=2){
+                Guess g = new Guess();
+                g.row = row;
+                g.column = col;
+                list.add(g);
+            }
+        }
+    }
 
     @Override
     public Answer getAnswer(Guess guess) {
@@ -27,16 +46,26 @@ public class GreedyGuessPlayer  implements Player{
 
     @Override
     public Guess makeGuess() {
-        // To be implemented.
+        Random random = new Random();
+        // ** Targeting greedy mode **
+        if(!greedyGuesses.isEmpty()){
+            int index = random.nextInt(greedyGuesses.size());
+            return greedyGuesses.remove(index);
+        }
 
-        // dummy return
-        return null;
+
+        int index = random.nextInt(patternGuesses.size());
+        return patternGuesses.remove(index);
     } // end of makeGuess()
 
 
     @Override
     public void update(Guess guess, Answer answer) {
         // To be implemented.
+        if(answer.isHit){
+            hitMatrix[guess.column][guess.row] = true;
+
+        }
     } // end of update()
 
 
