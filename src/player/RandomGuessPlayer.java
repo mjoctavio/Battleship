@@ -15,10 +15,6 @@ import world.World;
  */
 public class RandomGuessPlayer implements Player {
 
-    static final int numShips = 5;
-    static final int maxLen = 5;
-    static final int[] rowDeltas = new int[]{1, 0, -1, 0, 1, 0, -1, 0};
-    static final int[] clnDeltas = new int[]{0, -1, 0, 1, 1, 0, -1, 0};
     int rowSize = 0;
     int clnSize = 0;
     boolean isHex = false;
