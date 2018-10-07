@@ -35,8 +35,8 @@ public class RandomGuessPlayer implements Player {
             this.ownShip[var2].ship = var4.ship;
 
             for (int var5 = 0; var5 < this.ownShip[var2].ship.len(); ++var5) {
-                this.ownShip[var2].rowCdns[var5] = ((World.Coordinate) var4.coordinates.get(var5)).row;
-                this.ownShip[var2].clnCdns[var5] = ((World.Coordinate) var4.coordinates.get(var5)).column;
+                this.ownShip[var2].rowCdns[var5] = (var4.coordinates.get(var5)).row;
+                this.ownShip[var2].clnCdns[var5] = (var4.coordinates.get(var5)).column;
                 this.ownShip[var2].isdown[var5] = false;
             }
         }
@@ -44,53 +44,49 @@ public class RandomGuessPlayer implements Player {
 
     @Override
     public Answer getAnswer(Guess guess) {
-        Answer var2 = new Answer();
+        Answer answer = new Answer();
 
-        for(int var3 = 0; var3 < 5; ++var3) {
-            for(int var4 = 0; var4 < this.ownShip[var3].ship.len(); ++var4) {
-                if(guess.row == this.ownShip[var3].rowCdns[var4] && guess.column == this.ownShip[var3].clnCdns[var4]) {
-                    var2.isHit = true;
-                    this.ownShip[var3].isdown[var4] = true;
+        for(int ship = 0; ship < 5; ++ship) {
+            for(int i = 0; i < this.ownShip[ship].ship.len(); ++i) {
+                if(guess.row == this.ownShip[ship].rowCdns[i] && guess.column == this.ownShip[ship].clnCdns[i]) {
+                    answer.isHit = true;
+                    this.ownShip[ship].isdown[i] = true;
                     boolean var5 = true;
 
-                    for(int var6 = 0; var6 < this.ownShip[var3].ship.len(); ++var6) {
-                        if(!this.ownShip[var3].isdown[var6]) {
+                    for(int var6 = 0; var6 < this.ownShip[ship].ship.len(); ++var6) {
+                        if(!this.ownShip[ship].isdown[var6]) {
                             var5 = false;
                         }
                     }
 
                     if(var5) {
-                        var2.shipSunk = this.ownShip[var3].ship;
+                        answer.shipSunk = this.ownShip[ship].ship;
                     }
 
-                    return var2;
+                    return answer;
                 }
             }
         }
 
-        return var2;
+        return answer;
     } // end of getAnswer()
 
 
     @Override
     public Guess makeGuess() {
-        Random var3 = new Random();
-
-        int var1;
-        int var2;
+        Random random = new Random();
+        int i;
+        int j;
         do {
-            var1 = var3.nextInt(this.rowSize);
-            var2 = var3.nextInt(this.clnSize);
-            if(this.isHex) {
-                var2 += (var1 + 1) / 2;
-            }
+            i = random.nextInt(this.rowSize);
+            j = random.nextInt(this.clnSize);
         }
-        while(this.isguessed[var1][var2]);
-        Guess var4 = new Guess();
-        var4.row = var1;
-        var4.column = var2;
-        this.isguessed[var1][var2] = true;
-        return var4;
+        while(this.isguessed[i][j]);
+        Guess guess = new Guess();
+        guess.row = i;
+        guess.column = j;
+        this.isguessed[i][j] = true;
+        return guess;
     } // end of makeGuess()
 
 
