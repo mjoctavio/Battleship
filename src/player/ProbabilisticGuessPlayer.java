@@ -27,6 +27,7 @@ public class ProbabilisticGuessPlayer implements Player {
     public boolean isGuessed[][];
     public boolean hunting = true;
     public Guess prevGuess;
+    public Answer prevAnswer;
 
     public List<Guess> potentialGuesses;
     public int[][] patrolProbTable = new int[noRows][noCols];
@@ -250,7 +251,7 @@ public class ProbabilisticGuessPlayer implements Player {
         int highest =0;
         for (int i=0; i<noRows; i++) {
             for (int j=0; j<noCols; j++) {
-                if (highest<table[i][j]) {
+                if (highest<table[i][j] && !isGuessed[i][j]) {
                     highest = table[i][j];
                 }
             }
@@ -301,6 +302,63 @@ public class ProbabilisticGuessPlayer implements Player {
     public Guess makeGuess() {
         //Hunting Mode
         Guess guess = new Guess();
+
+        //Targeting mode
+        if (!hunting) {
+            int i = prevGuess.row;
+            int j = prevGuess.column;
+            if (j - 1 > -1 && isGuessed[i][j - 1] && i - 1 > -1 && isGuessed[i - 1][j] && j + 1 < noCols && isGuessed[i][j + 1] && i + 1 < noRows && isGuessed[i + 1][j]) {
+                hunting = true;
+            }
+            else {
+                List<Guess> potentialGuesses = new ArrayList<>();
+                if (j - 1 > -1 && !isGuessed[i][j - 1]) {
+                    Guess guess1 = new Guess();
+                    guess1.row = i;
+                    guess1.column = j - 1;
+                    potentialGuesses.add(guess1);
+                }
+                if (i - 1 > -1 && !isGuessed[i - 1][j]) {
+                    Guess guess2 = new Guess();
+                    guess2.row = i - 1;
+                    guess2.column = j;
+                    potentialGuesses.add(guess2);
+                }
+                if (j + 1 < noCols && !isGuessed[i][j + 1]) {
+                    Guess guess3 = new Guess();
+                    guess3.row = i;
+                    guess3.column = j + 1;
+                    potentialGuesses.add(guess3);
+                }
+                if (i + 1 < noRows && !isGuessed[i + 1][j]) {
+                    Guess guess4 = new Guess();
+                    guess4.row = i + 1;
+                    guess4.column = j;
+                    potentialGuesses.add(guess4);
+                }
+                int highest = 0;
+                List<Guess> highestGuesses = new ArrayList<>();
+                for (Guess g : potentialGuesses) {
+                    int prob = finalProbTable[g.row][g.column];
+                    if (prob >= highest) {
+                        highest = prob;
+                        highestGuesses.add(g);
+                    }
+                }
+                if (highestGuesses.size()==0) {
+                    hunting = true;
+                }
+                else {
+                    Random random = new Random();
+                    int index = random.nextInt(highestGuesses.size());
+                    guess = highestGuesses.get(index);
+                    isGuessed[guess.row][guess.column] = true;
+                    return guess;
+                }
+            }
+
+        }
+
         if (hunting) {
             List<Guess> potentialGuesses = findHighestProbs(finalProbTable);
             Random random = new Random();
@@ -309,11 +367,9 @@ public class ProbabilisticGuessPlayer implements Player {
             isGuessed[guess.row][guess.column] = true;
             return guess;
         }
-        //Targeting mode
-        if (!hunting) {
 
-            int i = prevGuess.row;
-            int j = prevGuess.column;
+            /**
+
             int prob1 = 0;
             int prob2 = 0;
             int prob3 = 0;
@@ -371,11 +427,15 @@ public class ProbabilisticGuessPlayer implements Player {
             isGuessed[guess.row][guess.column] = true;
             return guess;
         }
+             */
 
-        //Targeting Mode
         return guess;
 
     } // end of makeGuess()
+
+    public void hunting() {
+
+    }
 
 
 
@@ -385,9 +445,12 @@ public class ProbabilisticGuessPlayer implements Player {
         if (answer.isHit && answer.shipSunk==null) {
             hunting = false;
             prevGuess = guess;
+            prevAnswer = answer;
         }
         else if (answer.isHit && answer.shipSunk!=null) {
             hunting = true;
+            prevGuess = guess;
+            prevAnswer = answer;
             if (answer.shipSunk.name().equals("AircraftCarrier")) {
                 for (int i=0; i<noRows; i++) {
                     for (int j=0; j<noCols; j++) {
@@ -424,8 +487,15 @@ public class ProbabilisticGuessPlayer implements Player {
                 }
             }
         }
-        else {
-            //hunting = true;
+        else if (!answer.isHit) {
+            if (prevAnswer!=null) {
+                if (!prevAnswer.isHit) {
+                    hunting = true;
+                }
+                else {
+                    hunting = false;
+                }
+            }
         }
     } // end of update()
 
