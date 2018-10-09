@@ -14,7 +14,8 @@ import world.World;
  * Probabilistic guess player (task C).
  * Please implement this class.
  *
- * @author Youhan Xia, Jeffrey Chan
+ * @author Kristin Stenland
+ * last update 9 Oct 18
  *
  *
  */
@@ -28,8 +29,7 @@ public class ProbabilisticGuessPlayer implements Player {
     public boolean hunting = true;
     public Guess prevGuess;
     public Answer prevAnswer;
-
-    public List<Guess> potentialGuesses;
+    public List<Guess> targetGuesses;
     public int[][] patrolProbTable = new int[noRows][noCols];
     public int[][] subProbTable = new int[noRows][noCols];
     public int[][] frigateProbTable = new int[noRows][noCols];
@@ -38,14 +38,17 @@ public class ProbabilisticGuessPlayer implements Player {
     public int[][] carrierProbTableHoriz = new int[noRows][noCols];
     public int[][] finalProbTable = new int[noRows][noCols];
 
-
+    /**
+     *Initialises the world, places the players ship's
+     * and produces a table of probabilities
+     * */
     @Override
     public void initialisePlayer(World world) {
         noRows = world.numRow;
         noCols = world.numColumn;
         this.isGuessed = new boolean[this.noRows][this.noCols];
-        potentialGuesses = new ArrayList<>();
 
+        //place ships
         for (Iterator iterator = world.shipLocations.iterator(); iterator.hasNext(); ++count1) {
             World.ShipLocation shipLoc = (World.ShipLocation) iterator.next();
             this.ownShips[count1] = new ProbabilisticGuessPlayer.OwnShip();
@@ -57,33 +60,41 @@ public class ProbabilisticGuessPlayer implements Player {
                 this.ownShips[count1].isdown[i] = false;
             }
         }
+        //produce the probability table
         finalProbTable = produceProbTable();
+
         //print for troubleshooting
         printTable("Total Table", finalProbTable);
-
-
     } // end of initialisePlayer()
 
 
+    /**
+     * Produces a probability table for (A x 1) ships: Patrol Craft, Frigate and Submarine
+     * For each square in the grid, check if the ship can fit in each direction.
+     *
+     * @param maxProb
+     * @param shipLength
+     * @return
+     */
     public int[][] calcProb(int maxProb, int shipLength) {
         int[][] probTable = new int[noRows][noCols];
         for (int i = 0; i < noRows; i++) {
             for (int j = 0; j < noCols; j++) {
                 int tempProb = maxProb;
                 for (int k=1; k<shipLength; k++) {
-                    //left
+                    //check if ship can fit up
                     if (i-k<0) {
                         tempProb--;
                     }
-                    //right
+                    //check if ship can fit down
                     if (i+k>noRows-1) {
                         tempProb--;
                     }
-                    //up
+                    //check if ship can fit to the left
                     if (j-k<0) {
                         tempProb--;
                     }
-                    //down
+                    //check if ship can fit to the right
                     if (j+k>noCols-1) {
                         tempProb--;
                     }
@@ -94,6 +105,13 @@ public class ProbabilisticGuessPlayer implements Player {
         return probTable;
     }
 
+    /**
+     * Produces a probability table of an Aircraft Carrier in the vertical orientation
+     *
+     * @param shipLength
+     * @param shipHeight
+     * @return
+     */
     public int[][] calcCarrierProbVert(int shipLength, int shipHeight) {
         int[][] probTable = new int[noRows][noCols];
         for (int i=0; i<noRows; i++) {
@@ -123,6 +141,13 @@ public class ProbabilisticGuessPlayer implements Player {
         return probTable;
     }
 
+    /**
+     * Calculate the probability table for an Aircraft Carrier in the Horizontal Orientation
+     *
+     * @param shipLength
+     * @param shipHeight
+     * @return
+     */
     public int[][] calcCarrierProbHoriz(int shipLength, int shipHeight) {
         int[][] probTable = new int[noRows][noCols];
         for (int i=0; i<noRows; i++) {
@@ -152,44 +177,60 @@ public class ProbabilisticGuessPlayer implements Player {
         return probTable;
     }
 
+    /**
+     * Calculates the probability table for a Cruiser
+     *
+     * @param maxProb
+     * @param shipLength
+     * @param shipHeight
+     * @return
+     */
+
     public int[][] calcCruiserProb(int maxProb, int shipLength, int shipHeight) {
         int[][] probTable = new int[noRows][noCols];
         for (int i = 0; i < noRows; i++) {
             for (int j = 0; j < noCols; j++) {
                 int tempProb = maxProb;
+                //calc length
                 for (int k=1; k<shipLength; k++) {
-                    //left
+                    //check up
                     if (i-k<0) {
                         for (int l=1; l<shipHeight; l++) {
                             tempProb--;
                         }
                     }
-                    //right
+                    //check down
                     if (i+k>noRows-1) {
                         tempProb--;
                     }
-                    //up
+                    //check left
                     if (j-k<0) {
                         tempProb--;
                     }
-                    //down
+                    //check right
                     if (j+k>noCols-1) {
                         tempProb--;
                     }
+                    //calc height
                     for (int l=1; l<shipHeight; l++) {
+                        //check up
                         if (i-l<0) {
                             tempProb--;
                         }
+                        //check down
                         if (i+l>noRows-1) {
                             tempProb--;
                         }
+                        //check left
                         if (j-l<0) {
                             tempProb--;
                         }
+                        //check right
                         if (j+l>noCols-1) {
                             tempProb--;
                         }
                     }
+                    //increment corners
                     if ((i==0 && j==0) || (i==noRows-1 && j==noCols-1) || (i==noRows-1 && j==0) || (i==0 && j==noCols-1)) {
                         tempProb++;
                     }
@@ -200,6 +241,11 @@ public class ProbabilisticGuessPlayer implements Player {
         return probTable;
     }
 
+    /**
+     * Adds all the probability tables together to produce an overall probability table
+     *
+     * @return
+     */
     public int[][] produceProbTable() {
         int[][] finalProbTable = new int[noRows][noCols];
 
@@ -235,6 +281,13 @@ public class ProbabilisticGuessPlayer implements Player {
         return finalProbTable;
     }
 
+
+    /**
+     * Prints a probability table for troubleshooting
+     *
+     * @param name
+     * @param table
+     */
     public void printTable (String name, int[][] table) {
         System.out.println("Printing Prob Table for: " + name);
         for (int i=0; i<noRows; i++) {
@@ -246,31 +299,14 @@ public class ProbabilisticGuessPlayer implements Player {
         System.out.println();
     }
 
-    public List findHighestProbs(int[][] table) {
-        List<Guess> highestProbs = new ArrayList();
-        int highest =0;
-        for (int i=0; i<noRows; i++) {
-            for (int j=0; j<noCols; j++) {
-                if (highest<table[i][j] && !isGuessed[i][j]) {
-                    highest = table[i][j];
-                }
-            }
-        }
-        for (int i=0; i<noRows; i++) {
-            for (int j=0; j<noCols; j++) {
-                if (table[i][j] == highest && !isGuessed[i][j]) {
-                    Guess guess = new Guess();
-                    guess.row = i;
-                    guess.column = j;
-                    highestProbs.add(guess);
-                }
-            }
-        }
-        return highestProbs;
-    }
 
-
-
+    /**
+     * Get a guess from the opponent and see whether own ship is hit or sunk
+     *
+     * @param guess from the opponent.
+     *
+     * @return
+     */
     @Override
     public Answer getAnswer(Guess guess) {
         Answer answer = new Answer();
@@ -298,47 +334,59 @@ public class ProbabilisticGuessPlayer implements Player {
     } // end of getAnswer()
 
 
+    /**
+     * Make a guess, has hunting and targeting modes
+     *
+     * @return
+     */
     @Override
     public Guess makeGuess() {
-        //Hunting Mode
+
         Guess guess = new Guess();
+        targetGuesses = new ArrayList<>();
 
         //Targeting mode
         if (!hunting) {
             int i = prevGuess.row;
             int j = prevGuess.column;
+            //if all surround grid squares are guessed (and all grid squares are valid/within the grid) enter hunting mode
+            //this requires fixing!!
             if (j - 1 > -1 && isGuessed[i][j - 1] && i - 1 > -1 && isGuessed[i - 1][j] && j + 1 < noCols && isGuessed[i][j + 1] && i + 1 < noRows && isGuessed[i + 1][j]) {
                 hunting = true;
             }
             else {
-                List<Guess> potentialGuesses = new ArrayList<>();
+                //check to the left, if valid and if not guessed, add to the list of potential guesses
                 if (j - 1 > -1 && !isGuessed[i][j - 1]) {
                     Guess guess1 = new Guess();
                     guess1.row = i;
                     guess1.column = j - 1;
-                    potentialGuesses.add(guess1);
+                    targetGuesses.add(guess1);
                 }
+                //check up
                 if (i - 1 > -1 && !isGuessed[i - 1][j]) {
                     Guess guess2 = new Guess();
                     guess2.row = i - 1;
                     guess2.column = j;
-                    potentialGuesses.add(guess2);
+                    targetGuesses.add(guess2);
                 }
+                //check right
                 if (j + 1 < noCols && !isGuessed[i][j + 1]) {
                     Guess guess3 = new Guess();
                     guess3.row = i;
                     guess3.column = j + 1;
-                    potentialGuesses.add(guess3);
+                    targetGuesses.add(guess3);
                 }
+                //check down
                 if (i + 1 < noRows && !isGuessed[i + 1][j]) {
                     Guess guess4 = new Guess();
                     guess4.row = i + 1;
                     guess4.column = j;
-                    potentialGuesses.add(guess4);
+                    targetGuesses.add(guess4);
                 }
+                //find the highest probability of potential guesses
                 int highest = 0;
                 List<Guess> highestGuesses = new ArrayList<>();
-                for (Guess g : potentialGuesses) {
+                for (Guess g : targetGuesses) {
                     int prob = finalProbTable[g.row][g.column];
                     if (prob >= highest) {
                         highest = prob;
@@ -348,6 +396,7 @@ public class ProbabilisticGuessPlayer implements Player {
                 if (highestGuesses.size()==0) {
                     hunting = true;
                 }
+                //if more than one highest probability, pick one at random
                 else {
                     Random random = new Random();
                     int index = random.nextInt(highestGuesses.size());
@@ -358,7 +407,8 @@ public class ProbabilisticGuessPlayer implements Player {
             }
 
         }
-
+        //Hunting Mode
+        //Find highest probability grids and pick one at random
         if (hunting) {
             List<Guess> potentialGuesses = findHighestProbs(finalProbTable);
             Random random = new Random();
@@ -368,78 +418,48 @@ public class ProbabilisticGuessPlayer implements Player {
             return guess;
         }
 
-            /**
-
-            int prob1 = 0;
-            int prob2 = 0;
-            int prob3 = 0;
-            int prob4 = 0;
-            boolean isGuessed1 = false;
-            boolean isGuessed2 = false;
-            boolean isGuessed3 = false;
-            boolean isGuessed4 = false;
-            List<Guess> adjGuesses = new ArrayList<>();
-            if (j-1>-1) {
-                prob1 = finalProbTable[i][j-1];
-                isGuessed1 = isGuessed[i][j-1];
-            }
-            if (i-1>-1) {
-                prob2 = finalProbTable[i-1][j];
-                isGuessed2 = isGuessed[i-1][j];
-            }
-            if (j+1<noCols) {
-                prob3 = finalProbTable[i][j+1];
-                isGuessed3 = isGuessed[i][j+1];
-            }
-            if (i+1<noRows) {
-                prob4 = finalProbTable[i+1][j];
-                isGuessed4 = isGuessed[i+1][j];
-            }
-
-
-            if (prob1 >= prob2 && prob1 >= prob3 && prob1 >= prob4 && !isGuessed1 && j-1>-1) {
-                Guess guessAdj1 = new Guess();
-                guessAdj1.row = i;
-                guessAdj1.column = j-1;
-                adjGuesses.add(guessAdj1);
-            }
-            if (prob2 >= prob1 && prob2 >= prob3 && prob2 >= prob4 && !isGuessed2 && i-1>-1) {
-                Guess guessAdj2 = new Guess();
-                guessAdj2.row = i-1;
-                guessAdj2.column = j;
-                adjGuesses.add(guessAdj2);
-            }
-            if (prob3 >= prob1 && prob3 >= prob2 && prob3 >= prob4 && !isGuessed3 && j+1<noCols) {
-                Guess guessAdj3 = new Guess();
-                guessAdj3.row = i;
-                guessAdj3.column = j+1;
-                adjGuesses.add(guessAdj3);
-            }
-            if (prob4 >= prob1 && prob4 >= prob2 && prob4 >= prob3 && !isGuessed4 && i+1<noRows) {
-                Guess guessAdj4 = new Guess();
-                guessAdj4.row = i+1;
-                guessAdj4.column = j;
-                adjGuesses.add(guessAdj4);
-            }
-            Random random = new Random();
-            int index = random.nextInt(adjGuesses.size());
-            guess = adjGuesses.get(index);
-            isGuessed[guess.row][guess.column] = true;
-            return guess;
-        }
-             */
-
         return guess;
 
     } // end of makeGuess()
 
-    public void hunting() {
-
+    /**
+     * Return an Arraylist of the highest probability squares from the table
+     *
+     * @param table
+     * @return
+     */
+    public List findHighestProbs(int[][] table) {
+        List<Guess> highestProbs = new ArrayList();
+        int highest =0;
+        //find highest probability
+        for (int i=0; i<noRows; i++) {
+            for (int j=0; j<noCols; j++) {
+                if (highest<table[i][j] && !isGuessed[i][j]) {
+                    highest = table[i][j];
+                }
+            }
+        }
+        //add highest probability grids to an array list
+        for (int i=0; i<noRows; i++) {
+            for (int j=0; j<noCols; j++) {
+                if (table[i][j] == highest && !isGuessed[i][j]) {
+                    Guess guess = new Guess();
+                    guess.row = i;
+                    guess.column = j;
+                    highestProbs.add(guess);
+                }
+            }
+        }
+        return highestProbs;
     }
 
 
-
-
+    /**
+     * Updates probability table and hunting/targeting mode based on the previous guess and returned answer
+     *
+     * @param guess Guess of this player.
+     * @param answer Answer to the guess from opponent.
+     */
     @Override
     public void update(Guess guess, Answer answer) {
         if (answer.isHit && answer.shipSunk==null) {
@@ -449,8 +469,9 @@ public class ProbabilisticGuessPlayer implements Player {
         }
         else if (answer.isHit && answer.shipSunk!=null) {
             hunting = true;
-            prevGuess = guess;
-            prevAnswer = answer;
+            targetGuesses.clear();
+            //prevGuess = guess;
+            //prevAnswer = answer;
             if (answer.shipSunk.name().equals("AircraftCarrier")) {
                 for (int i=0; i<noRows; i++) {
                     for (int j=0; j<noCols; j++) {
@@ -487,7 +508,17 @@ public class ProbabilisticGuessPlayer implements Player {
                 }
             }
         }
-        else if (!answer.isHit) {
+        /**
+        else if (!answer.isHit && !hunting) {
+            if (targetGuesses.size()!=0) {
+                hunting = false;
+            }
+            else {
+                hunting = true;
+            }
+
+
+
             if (prevAnswer!=null) {
                 if (!prevAnswer.isHit) {
                     hunting = true;
@@ -496,7 +527,9 @@ public class ProbabilisticGuessPlayer implements Player {
                     hunting = false;
                 }
             }
-        }
+
+        }*/
+
     } // end of update()
 
 
