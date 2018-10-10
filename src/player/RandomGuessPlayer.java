@@ -11,14 +11,14 @@ import world.World;
  * Random guess player (task A).
  * Please implement this class.
  *
- * @author Youhan Xia, Jeffrey Chan
+ * @author Youhan Xia, Jeffrey Chan, Kristin Stenland
  */
 public class RandomGuessPlayer implements Player {
 
-    int rowSize = 0;
-    int clnSize = 0;
-    boolean isHex = false;
-    RandomGuessPlayer.OwnShip[] ownShip = new RandomGuessPlayer.OwnShip[5];
+    public int rowSize = 0;
+    public int clnSize = 0;
+    public boolean isHex = false;
+    RandomGuessPlayer.OwnShip[] ownShips = new RandomGuessPlayer.OwnShip[5];
     boolean[][] isguessed;
 
     @Override
@@ -27,40 +27,48 @@ public class RandomGuessPlayer implements Player {
         this.clnSize = world.numColumn;
         this.isHex = world.isHex;
         this.isguessed = new boolean[this.rowSize][this.clnSize];
-        int var2 = 0;
+        int count1 = 0;
 
-        for (Iterator var3 = world.shipLocations.iterator(); var3.hasNext(); ++var2) {
-            World.ShipLocation var4 = (World.ShipLocation) var3.next();
-            this.ownShip[var2] = new RandomGuessPlayer.OwnShip();
-            this.ownShip[var2].ship = var4.ship;
+        //place ships
+        for (Iterator iterator = world.shipLocations.iterator(); iterator.hasNext(); ++count1) {
+            World.ShipLocation shipLoc = (World.ShipLocation) iterator.next();
+            this.ownShips[count1] = new RandomGuessPlayer.OwnShip();
+            this.ownShips[count1].ship = shipLoc.ship;
 
-            for (int var5 = 0; var5 < this.ownShip[var2].ship.len(); ++var5) {
-                this.ownShip[var2].rowCdns[var5] = (var4.coordinates.get(var5)).row;
-                this.ownShip[var2].clnCdns[var5] = (var4.coordinates.get(var5)).column;
-                this.ownShip[var2].isdown[var5] = false;
+            for (int i = 0; i < this.ownShips[count1].ship.len(); ++i) {
+                this.ownShips[count1].rowCdns[i] = (shipLoc.coordinates.get(i)).row;
+                this.ownShips[count1].clnCdns[i] = (shipLoc.coordinates.get(i)).column;
+                this.ownShips[count1].isdown[i] = false;
             }
         }
     } // end of initialisePlayer()
 
+    /**
+     * Get a guess from the opponent and see whether own ship is hit or sunk
+     *
+     * @param guess from the opponent.
+     *
+     * @return
+     */
     @Override
     public Answer getAnswer(Guess guess) {
         Answer answer = new Answer();
 
         for(int ship = 0; ship < 5; ++ship) {
-            for(int i = 0; i < this.ownShip[ship].ship.len(); ++i) {
-                if(guess.row == this.ownShip[ship].rowCdns[i] && guess.column == this.ownShip[ship].clnCdns[i]) {
+            for(int i = 0; i < this.ownShips[ship].ship.len(); ++i) {
+                if(guess.row == this.ownShips[ship].rowCdns[i] && guess.column == this.ownShips[ship].clnCdns[i]) {
                     answer.isHit = true;
-                    this.ownShip[ship].isdown[i] = true;
+                    this.ownShips[ship].isdown[i] = true;
                     boolean var5 = true;
 
-                    for(int var6 = 0; var6 < this.ownShip[ship].ship.len(); ++var6) {
-                        if(!this.ownShip[ship].isdown[var6]) {
+                    for(int var6 = 0; var6 < this.ownShips[ship].ship.len(); ++var6) {
+                        if(!this.ownShips[ship].isdown[var6]) {
                             var5 = false;
                         }
                     }
 
                     if(var5) {
-                        answer.shipSunk = this.ownShip[ship].ship;
+                        answer.shipSunk = this.ownShips[ship].ship;
                     }
 
                     return answer;
@@ -72,6 +80,11 @@ public class RandomGuessPlayer implements Player {
     } // end of getAnswer()
 
 
+    /**
+     * Make a guess in a random grid square
+     *
+     * @return
+     */
     @Override
     public Guess makeGuess() {
         Random random = new Random();
@@ -90,6 +103,12 @@ public class RandomGuessPlayer implements Player {
     } // end of makeGuess()
 
 
+    /**
+     * Update - not used
+     *
+     * @param guess Guess of this player.
+     * @param answer Answer to the guess from opponent.
+     */
     @Override
     public void update(Guess guess, Answer answer) {
         // To be implemented.
@@ -98,10 +117,9 @@ public class RandomGuessPlayer implements Player {
 
     @Override
     public boolean noRemainingShips() {
-
         for(int var1 = 0; var1 < 5; ++var1) {
-            for(int var2 = 0; var2 < this.ownShip[var1].ship.len(); ++var2) {
-                if(!this.ownShip[var1].isdown[var2]) {
+            for(int var2 = 0; var2 < this.ownShips[var1].ship.len(); ++var2) {
+                if(!this.ownShips[var1].isdown[var2]) {
                     return false;
                 }
             }
@@ -109,6 +127,11 @@ public class RandomGuessPlayer implements Player {
         return true;
     } // end of noRemainingShips()
 
+    /**
+     * Check if all ships sunk
+     *
+     * @return
+     */
     private class OwnShip {
         Ship ship;
         int[] rowCdns;

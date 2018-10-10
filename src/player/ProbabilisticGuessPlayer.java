@@ -8,7 +8,7 @@ import java.util.Random;
 import ship.Ship;
 import world.World;
 
-@SuppressWarnings("Duplicates")
+//@SuppressWarnings("Duplicates")
 
 /**
  * Probabilistic guess player (task C).
@@ -185,7 +185,6 @@ public class ProbabilisticGuessPlayer implements Player {
      * @param shipHeight
      * @return
      */
-
     public int[][] calcCruiserProb(int maxProb, int shipLength, int shipHeight) {
         int[][] probTable = new int[noRows][noCols];
         for (int i = 0; i < noRows; i++) {
@@ -508,31 +507,14 @@ public class ProbabilisticGuessPlayer implements Player {
                 }
             }
         }
-        /**
-        else if (!answer.isHit && !hunting) {
-            if (targetGuesses.size()!=0) {
-                hunting = false;
-            }
-            else {
-                hunting = true;
-            }
-
-
-
-            if (prevAnswer!=null) {
-                if (!prevAnswer.isHit) {
-                    hunting = true;
-                }
-                else {
-                    hunting = false;
-                }
-            }
-
-        }*/
-
     } // end of update()
 
 
+    /**
+     * Check if all ships sunk
+     *
+     * @return
+     */
     @Override
     public boolean noRemainingShips() {
         for(int var1 = 0; var1 < 5; ++var1) {
